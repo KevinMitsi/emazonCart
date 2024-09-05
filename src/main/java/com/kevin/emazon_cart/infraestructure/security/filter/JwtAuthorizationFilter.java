@@ -21,15 +21,18 @@ import java.util.Date;
 
 import static com.kevin.emazon_cart.infraestructure.security.util.ConstantsUtilSecurityClass.*;
 
+
+
 @RequiredArgsConstructor
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     public static final String USERNAME_KEY = "username";
     public static final String ROLE_KEY = "role";
-    public static final String EXPIRED_TOKEN_MESAGE = "Token expirado";
-    public static final String INVALID_TOKEN_MESSAGE = "Token inválido";
-    public static final String SECURITY_ROLE_ENTRANCE = "ROLE_";
+    public static final String EXPIRED_TOKEN_MESSAGE = "Token expirado";
+    public static final String INVALID_TOKEN_MESSAGE = "Token invalido";
+    public static final String SECURITY_ROLE_BASE = "ROLE_";
     public static final String EMPTY_STRING = "";
+    public static final String ID_KEY = "id_user";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -39,7 +42,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         String header = request.getHeader(HEADER_AUTHORIZATION);
 
         if (header != null && header.startsWith(PREFIX_TOKEN)) {
-            String token = header.replace(PREFIX_TOKEN, "");
+            String token = header.replace(PREFIX_TOKEN, EMPTY_STRING);
 
             try {
                 Claims claims = Jwts.parser()
@@ -50,17 +53,20 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
                 String username = claims.get(USERNAME_KEY, String.class);
                 String roleFromToken = claims.get(ROLE_KEY, String.class);
+                Long idFromToken = claims.get(ID_KEY, Long.class);
 
                 if (validateToken(claims)) {
                     UserDetails userDetails = loadUserDetails(username, roleFromToken);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    authentication.setDetails(idFromToken);
+
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (ExpiredJwtException e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write(EXPIRED_TOKEN_MESAGE);
+                response.getWriter().write(EXPIRED_TOKEN_MESSAGE);
                 return;
             } catch (JwtException e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -81,7 +87,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(username)
                 .password(EMPTY_STRING)
-                .roles(roleFromToken.replace(SECURITY_ROLE_ENTRANCE, EMPTY_STRING))
+                .roles(roleFromToken.replace(SECURITY_ROLE_BASE, EMPTY_STRING))
                 .build();
     }
 }
