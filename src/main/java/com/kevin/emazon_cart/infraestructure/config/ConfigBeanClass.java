@@ -12,4 +12,5 @@ public class ConfigBeanClass {
     ICartServicePort getServicePort(ICartPersistentPort persistentPort){
         return new CartUseCase(persistentPort);
     }
+
 }

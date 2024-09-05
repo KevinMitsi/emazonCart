@@ -13,7 +13,7 @@ public class CartHandlerImpl implements ICartHandler {
     private final ICartDtoMapper cartDtoMapper;
 
     @Override
-    public void addItemToCart() {
+    public void addItemToCart(Long userId, Long itemId) {
         cartServicePort.addItemToCart();
     }
 }
