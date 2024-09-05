@@ -1,0 +1,96 @@
+package com.kevin.emazon_cart.application.dto;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Date;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
+ class CartDtoTest {
+    private Validator validator;
+
+    @BeforeEach
+    public void setUp() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
+
+    @Test
+    void testValidCartDto() {
+        CartDto cartDto = new CartDto(1L, 2L, 3.0, new Date(), new Date());
+        Set<ConstraintViolation<CartDto>> violations = validator.validate(cartDto);
+        assertTrue(violations.isEmpty(), "Valid CartDto should have no violations");
+    }
+
+    @Test
+    void testNullItemId() {
+        CartDto cartDto = new CartDto(null, 2L, 3.0, new Date(), new Date());
+        Set<ConstraintViolation<CartDto>> violations = validator.validate(cartDto);
+        assertFalse(violations.isEmpty());
+        assertEquals("el item no puede ser null", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    void testNullUserId() {
+        CartDto cartDto = new CartDto(1L, null, 3.0, new Date(), new Date());
+        Set<ConstraintViolation<CartDto>> violations = validator.validate(cartDto);
+        assertFalse(violations.isEmpty());
+        assertEquals("El campo userId no puede ser null", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    void testNullQuantity() {
+        CartDto cartDto = new CartDto(1L, 2L, null, new Date(), new Date());
+        Set<ConstraintViolation<CartDto>> violations = validator.validate(cartDto);
+        assertFalse(violations.isEmpty());
+        assertEquals("El campo quantity no puede ser null", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    void testNegativeOrZeroQuantity() {
+        CartDto cartDto = new CartDto(1L, 2L, -1.0, new Date(), new Date());
+        Set<ConstraintViolation<CartDto>> violations = validator.validate(cartDto);
+        assertFalse(violations.isEmpty());
+        assertEquals("El valor del campo quantity debe ser positivo", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    void testNullUpdateDate() {
+        CartDto cartDto = new CartDto(1L, 2L, 3.0, null, new Date());
+        Set<ConstraintViolation<CartDto>> violations = validator.validate(cartDto);
+        assertFalse(violations.isEmpty());
+        assertEquals("El campo updateDate no puede ser null", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    void testInvalidUpdateDate() {
+        Date futureDate = new Date(System.currentTimeMillis() + 86400000); // Tomorrow's date
+        CartDto cartDto = new CartDto(1L, 2L, 3.0, futureDate, new Date());
+        Set<ConstraintViolation<CartDto>> violations = validator.validate(cartDto);
+        assertFalse(violations.isEmpty());
+        assertEquals("La fecha de actualización (updateDate) no puede ser mayor a la fecha actual", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    void testNullCreationDate() {
+        CartDto cartDto = new CartDto(1L, 2L, 3.0, new Date(), null);
+        Set<ConstraintViolation<CartDto>> violations = validator.validate(cartDto);
+        assertFalse(violations.isEmpty());
+        assertEquals("El campo creationDate no puede ser null", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    void testInvalidCreationDate() {
+        Date futureDate = new Date(System.currentTimeMillis() + 86400000); // Tomorrow's date
+        CartDto cartDto = new CartDto(1L, 2L, 3.0, new Date(), futureDate);
+        Set<ConstraintViolation<CartDto>> violations = validator.validate(cartDto);
+        assertFalse(violations.isEmpty());
+        assertEquals("La fecha de creación (creationDate) no puede ser mayor a la fecha actual", violations.iterator().next().getMessage());
+    }
+
+}
