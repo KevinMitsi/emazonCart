@@ -28,4 +28,6 @@ public class CartEntity {
     private Date updateDate;
     private Date creationDate;
 
+
+
 }
