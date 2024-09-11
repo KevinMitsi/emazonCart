@@ -1,5 +1,6 @@
 package com.kevin.emazon_cart.infraestructure.adapter;
 
+import com.kevin.emazon_cart.domain.model.Cart;
 import com.kevin.emazon_cart.domain.spi.ICartPersistentPort;
 import com.kevin.emazon_cart.infraestructure.mapper.ICartEntityMapper;
 import com.kevin.emazon_cart.infraestructure.repository.ICartRepository;
@@ -13,7 +14,7 @@ public class CartJpaRepository implements ICartPersistentPort {
     private final ICartEntityMapper cartEntityMapper;
 
     @Override
-    public void addItemToCart() {
-        //not yet
+    public void addItemToCart(Cart cart) {
+        cartRepository.save(cartEntityMapper.cartToCartEntity(cart));
     }
 }
