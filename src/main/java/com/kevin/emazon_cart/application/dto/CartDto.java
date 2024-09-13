@@ -1,7 +1,6 @@
 package com.kevin.emazon_cart.application.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,7 +26,7 @@ public class CartDto {
 
     @NotNull(message = NULL_QUANTITY_MESSAGE)
     @Positive(message = NEGATIVE_OR_ZERO_QUANTITY_MESSAGE)
-    private Double quantity;
+    private Long quantity;
 
 
     private Date updateDate;
