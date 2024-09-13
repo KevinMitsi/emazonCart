@@ -2,10 +2,17 @@ package com.kevin.emazon_cart.infraestructure.adapter;
 
 import com.kevin.emazon_cart.domain.model.Cart;
 import com.kevin.emazon_cart.domain.spi.ICartPersistentPort;
+import com.kevin.emazon_cart.infraestructure.entity.CartEntity;
 import com.kevin.emazon_cart.infraestructure.mapper.ICartEntityMapper;
 import com.kevin.emazon_cart.infraestructure.repository.ICartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
 
 @Repository
 @RequiredArgsConstructor
@@ -14,7 +21,40 @@ public class CartJpaRepository implements ICartPersistentPort {
     private final ICartEntityMapper cartEntityMapper;
 
     @Override
+    @Transactional
     public void addItemToCart(Cart cart) {
         cartRepository.save(cartEntityMapper.cartToCartEntity(cart));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> getItemsInUserCart(Long userId) {
+        return cartRepository.itemsInUserCart(userId);
+    }
+
+    @Override
+    @Transactional
+    public void updateItemQuantity(Cart cart) {
+        CartEntity cartEntity = cartRepository.findByItemId(cart.getItemId()).orElseThrow();
+        cartEntity.setQuantity(cart.getQuantity());
+        cartEntity.setUpdateDate(cart.getUpdateDate());
+        cartRepository.save(cartEntity);
+    }
+
+    @Override
+    public Long getItemQuantityByItemId(Long itemId) {
+        return cartRepository.findItemQuantityByItemId(itemId);
+    }
+
+    @Override
+    public Optional<Date> findDateByItemId(Long itemId) {
+        return cartRepository.findDateByItemId(itemId);
+    }
+
+    @Override
+    public void deleteByItemId(Long itemId) {
+        cartRepository.deleteByItemId(itemId);
+    }
+
+
 }

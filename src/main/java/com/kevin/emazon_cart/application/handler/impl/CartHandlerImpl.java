@@ -15,7 +15,12 @@ public class CartHandlerImpl implements ICartHandler {
     private final ICartDtoMapper cartDtoMapper;
 
     @Override
-    public void addItemToCart(CartDto cartDto) {
-        cartServicePort.addItemToCart(cartDtoMapper.cartDtoToCart(cartDto));
+    public String addItemToCart(CartDto cartDto) {
+       return cartServicePort.addItemToCart(cartDtoMapper.cartDtoToCart(cartDto));
+    }
+
+    @Override
+    public void deleteByItemId(Long itemId) {
+        cartServicePort.deleteByItemId(itemId);
     }
 }
