@@ -24,8 +24,10 @@ public class CartEntity {
     private Long itemId;
 
     private Long userId;
-    private Double quantity;
+    private Long quantity;
     private Date updateDate;
     private Date creationDate;
+
+
 
 }
