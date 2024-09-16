@@ -32,8 +32,8 @@ public class CartController {
     @DeleteMapping("delete/byItemId/{itemId}")
     @Secured(ROLE_CLIENT)
     public ResponseEntity<String> deleteItemFromCart(@PathVariable Long itemId){
-        cartHandler.deleteByItemId(itemId);
-        return ResponseEntity.status(200).body("done");
+        cartHandler.deleteByItemId(itemId, (Long) SecurityContextHolder.getContext().getAuthentication().getDetails());
+        return ResponseEntity.status(200).body("deleted");
     }
 
 

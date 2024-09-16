@@ -55,8 +55,16 @@ public class CartUseCase implements ICartServicePort {
     }
 
     @Override
-    public void deleteByItemId(Long itemId) {
-        cartPersistentPort.deleteByItemId(itemId);
+    public void deleteByItemId(Long itemId, Long userId) {
+        List<Cart> allProductsInCart = findAllProductsInCart(userId);
+        allProductsInCart.forEach(this::prepareDate);
+        cartPersistentPort.deleteByItemId(itemId, userId);
+        cartPersistentPort.saveAll(allProductsInCart);
+    }
+
+    @Override
+    public List<Cart> findAllProductsInCart(Long userId) {
+        return cartPersistentPort.findAllProductsInCart(userId);
     }
 
 

@@ -20,6 +20,7 @@ public interface ICartRepository extends JpaRepository<CartEntity, Long> {
     @Query("SELECT c.creationDate FROM CartEntity c WHERE  c.itemId = :itemId")
     Optional<Date> findDateByItemId(Long itemId);
 
+    void deleteByItemIdAndUserId(Long itemId, Long userId);
 
-    void deleteByItemId(Long itemId);
+    List<CartEntity>findAllByUserId(Long userId);
 }

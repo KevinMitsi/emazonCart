@@ -113,11 +113,12 @@ class CartUseCaseTest {
     void deleteByItemId_ShouldDeleteItemFromCart() {
         // Arrange
         Long itemId = 2L;
+        Long userId = 1L;
 
         // Act
-        cartUseCase.deleteByItemId(itemId);
+        cartUseCase.deleteByItemId(itemId, userId);
 
         // Assert
-        verify(cartPersistentPort, times(1)).deleteByItemId(itemId);
+        verify(cartPersistentPort, times(1)).deleteByItemId(itemId, userId);
     }
 }

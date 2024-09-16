@@ -20,7 +20,7 @@ public class CartHandlerImpl implements ICartHandler {
     }
 
     @Override
-    public void deleteByItemId(Long itemId) {
-        cartServicePort.deleteByItemId(itemId);
+    public void deleteByItemId(Long itemId, Long userId) {
+        cartServicePort.deleteByItemId(itemId,userId);
     }
 }

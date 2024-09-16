@@ -55,9 +55,24 @@ public class CartJpaRepository implements ICartPersistentPort {
 
     @Override
     @Transactional
-    public void deleteByItemId(Long itemId) {
-        cartRepository.deleteByItemId(itemId);
+  
+    public void deleteByItemId(Long itemId, Long userId) {
+        cartRepository.deleteByItemIdAndUserId(itemId, userId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Cart> findAllProductsInCart(Long userId) {
+        return cartRepository.findAllByUserId(userId)
+                .stream()
+                .map(cartEntityMapper::cartEntityToCart).toList();
+    }
+
+    @Override
+    @Transactional
+    public void saveAll(List<Cart> products) {
+        cartRepository.saveAll(products.stream().map(cartEntityMapper::cartToCartEntity).toList());
+
 
 
 }
