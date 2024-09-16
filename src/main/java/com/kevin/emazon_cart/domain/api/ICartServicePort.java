@@ -8,5 +8,7 @@ public interface ICartServicePort {
     String addItemToCart(Cart cart);
     List<Long> getItemsInUserCart(Long userId);
 
-    void deleteByItemId(Long itemId);
+    void deleteByItemId(Long itemId, Long userId);
+
+    List<Cart> findAllProductsInCart(Long userId);
 }

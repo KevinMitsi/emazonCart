@@ -16,5 +16,8 @@ public interface ICartPersistentPort {
     Long getItemQuantityByItemId(Long itemId);
     Optional<Date> findDateByItemId(Long  itemId);
 
-    void deleteByItemId(Long itemId);
+    void deleteByItemId(Long itemId, Long userId);
+    List<Cart> findAllProductsInCart(Long userId);
+
+    void saveAll(List<Cart> products);
 }
