@@ -1,5 +1,7 @@
 package com.kevin.emazon_cart.infraestructure.adapter;
 
+import com.kevin.emazon_cart.domain.model.ItemCartRequest;
+import com.kevin.emazon_cart.domain.model.ItemCartResponse;
 import com.kevin.emazon_cart.domain.spi.externalservices.IConnectionStockPort;
 import com.kevin.emazon_cart.infraestructure.feign.service.StockFeignClient;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,11 @@ public class FeignStockAdapter implements IConnectionStockPort {
     @Override
     public boolean validateCategoryLimit(List<Long> itemsIds) {
         return stockFeignClient.validateCategoryLimit(itemsIds);
+    }
+
+    @Override
+    public List<ItemCartResponse> findAllProductsInCart(ItemCartRequest itemCartRequest) {
+        return stockFeignClient.findAllProductsInCart(itemCartRequest);
     }
 
 

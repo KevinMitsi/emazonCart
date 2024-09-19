@@ -8,16 +8,12 @@ import java.util.Optional;
 
 public interface ICartPersistentPort {
     void addItemToCart(Cart cart);
-
     List<Long>getItemsInUserCart(Long userId);
-
     void updateItemQuantity(Cart cart);
-
     Long getItemQuantityByItemId(Long itemId);
     Optional<Date> findDateByItemId(Long  itemId);
-
     void deleteByItemId(Long itemId, Long userId);
-    List<Cart> findAllProductsInCart(Long userId);
-
+    List<Cart> findAllCartRecords(Long userId);
     void saveAll(List<Cart> products);
+
 }

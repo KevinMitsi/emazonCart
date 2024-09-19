@@ -49,6 +49,10 @@ public class ExceptionHandlerInterceptor {
     public ResponseEntity<ExceptionResponseDto> inCaseCategoryLimitException(Exception e){
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponseDto(e.getClass().getName(), e.getMessage(), HttpStatus.BAD_REQUEST));
     }
+    @ExceptionHandler(ItemIsNotInCartException.class)
+    public ResponseEntity<ExceptionResponseDto> inCaseItemNotInCarException(Exception e){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponseDto(e.getClass().getName(), e.getMessage(), HttpStatus.BAD_REQUEST));
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<ExceptionResponseDto>> inCaseThrowingConstraintViolationException(MethodArgumentNotValidException e){
