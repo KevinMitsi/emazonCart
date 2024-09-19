@@ -2,9 +2,10 @@ package com.kevin.emazon_cart.infraestructure.controller;
 
 import com.kevin.emazon_cart.application.dto.CartDto;
 import com.kevin.emazon_cart.application.handler.ICartHandler;
+import com.kevin.emazon_cart.domain.model.ItemCartResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -18,7 +19,10 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class CartController {
     public static final String ROLE_CLIENT = "ROLE_CLIENTE";
-
+    private static final String DELETED_ITEM_MESSAGE = "Felicidades ha eliminado correctamente de su carrito el item: ";
+    public static final String ORDER_DEFAULT_VALUE = "asc";
+    public static final String DEFAULT_PAGE_NUMBER = "0";
+    public static final String DEFAULT_PAGE_SIZE = "6";
 
     private final ICartHandler cartHandler;
 
@@ -33,9 +37,21 @@ public class CartController {
     @Secured(ROLE_CLIENT)
     public ResponseEntity<String> deleteItemFromCart(@PathVariable Long itemId){
         cartHandler.deleteByItemId(itemId, (Long) SecurityContextHolder.getContext().getAuthentication().getDetails());
-        return ResponseEntity.status(200).body("deleted");
+        return ResponseEntity.status(200).body(DELETED_ITEM_MESSAGE+itemId);
     }
 
+    @GetMapping("/myItems")
+    @Secured(ROLE_CLIENT)
+    public ResponseEntity<Page<ItemCartResponse>>
+    getMyItems(@RequestParam(required = false)Long categoryId,
+               @RequestParam(required = false)Long brandId,
+               @RequestParam(required = false, defaultValue = ORDER_DEFAULT_VALUE)String orderingMethod,
+               @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NUMBER)Integer pageNumber,
+               @RequestParam(required = false, defaultValue = DEFAULT_PAGE_SIZE)Integer pageSize){
+        return ResponseEntity.status(HttpStatus.OK).body(
+                cartHandler.findAllProductsInCart((Long) SecurityContextHolder.getContext().getAuthentication().getDetails(),
+                        categoryId,brandId,orderingMethod,pageNumber,pageSize));
+    }
 
 
 }

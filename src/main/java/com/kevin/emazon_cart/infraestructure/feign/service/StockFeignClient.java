@@ -1,5 +1,7 @@
 package com.kevin.emazon_cart.infraestructure.feign.service;
 
+import com.kevin.emazon_cart.domain.model.ItemCartRequest;
+import com.kevin.emazon_cart.domain.model.ItemCartResponse;
 import com.kevin.emazon_cart.infraestructure.feign.FeignConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,5 +21,8 @@ public interface StockFeignClient {
     boolean isEnoughInStock(@PathVariable Long id, @PathVariable Long quantity);
     @PostMapping("/item/validateCategoryLimit")
     boolean validateCategoryLimit(@RequestBody List<Long> itemIds);
+
+    @PostMapping("/item/itemCarts")
+    List<ItemCartResponse> findAllProductsInCart(@RequestBody ItemCartRequest itemCartRequest);
 
 }
