@@ -2,10 +2,13 @@ package com.kevin.emazon_cart.domain.usecase;
 
 import com.kevin.emazon_cart.domain.api.ICartServicePort;
 import com.kevin.emazon_cart.domain.model.Cart;
+import com.kevin.emazon_cart.domain.model.ItemCartRequest;
+import com.kevin.emazon_cart.domain.model.ItemCartResponse;
 import com.kevin.emazon_cart.domain.spi.ICartPersistentPort;
 import com.kevin.emazon_cart.domain.spi.externalservices.IConnectionStockPort;
 import com.kevin.emazon_cart.domain.spi.externalservices.IConnectionTransactionPort;
 import com.kevin.emazon_cart.infraestructure.exception.CategoriesLimitException;
+import com.kevin.emazon_cart.infraestructure.exception.ItemIsNotInCartException;
 import com.kevin.emazon_cart.infraestructure.exception.ItemNotFoundException;
 import com.kevin.emazon_cart.infraestructure.exception.NotEnoughItemInStockResponse;
 
@@ -19,6 +22,9 @@ public class CartUseCase implements ICartServicePort {
     public static final String NOT_ENOUGH_STOCK_MESSAGE = "No hay suficientes artículos en Stock para agregar, el ultimo suministro fue el: ";
     public static final String ADDED_TO_CART_MESSAGE = "Ha añadido a su carrito el item: ";
     public static final String CATEGORIES_LIMIT_EXCEED_MESSAGE = "No puede agregar más de 3 artículos con la misma categoría.";
+    public static final String ITEM_NOT_IN_USER_CART_EXCEPTION_MESSAGE = "Este item no se encuentra en su carrito";
+    public static final String ZERO_STRING_VALUE = "0";
+    public static final String NO_STOCK_ITEM = "Item sin stock, supply date: ";
     private final ICartPersistentPort cartPersistentPort;
     private final IConnectionStockPort connectionStockPort;
     private final IConnectionTransactionPort connectionTransactionPort;
@@ -34,7 +40,7 @@ public class CartUseCase implements ICartServicePort {
     @Override
     public String addItemToCart(Cart cart) {
         validateIfItemExistInStock(cart);
-        List<Long> itemsInCart = fillItemIdsOfUser(cart);
+        List<Long> itemsInCart = itemIdsInUserCart(cart.getUserId());
 
         if (itemsInCart.contains(cart.getItemId())){
             return updatedItemInStock(cart);
@@ -48,29 +54,44 @@ public class CartUseCase implements ICartServicePort {
         cartPersistentPort.addItemToCart(cart);
         return createdMessageResponse;
     }
-
     @Override
-    public List<Long> getItemsInUserCart(Long userId) {
+    public List<Long> getItemsIdsInUserCart(Long userId) {
         return cartPersistentPort.getItemsInUserCart(userId);
     }
-
     @Override
     public void deleteByItemId(Long itemId, Long userId) {
-        List<Cart> allProductsInCart = findAllProductsInCart(userId);
-        allProductsInCart.forEach(this::prepareDate);
-        cartPersistentPort.deleteByItemId(itemId, userId);
-        cartPersistentPort.saveAll(allProductsInCart);
-    }
+        if (!getItemsIdsInUserCart(userId).contains(itemId)){
+            throw new ItemIsNotInCartException(ITEM_NOT_IN_USER_CART_EXCEPTION_MESSAGE);
+        }
 
+        cartPersistentPort.deleteByItemId(itemId, userId);
+        List<Cart> allProductsInCartUpdated = getAllAndUpdateDate(userId);
+        cartPersistentPort.saveAll(allProductsInCartUpdated);
+    }
     @Override
-    public List<Cart> findAllProductsInCart(Long userId) {
-        return cartPersistentPort.findAllProductsInCart(userId);
+    public List<ItemCartResponse> findAllProductsInCart(Long userId, Long category, Long brand) {
+        List<Long> userItemIds = getItemsIdsInUserCart(userId);
+        return checkIfItemsHaveStock(connectionStockPort.findAllProductsInCart(new ItemCartRequest(userItemIds, category, brand)));
     }
 
 
     //Methods of the class
 
+    private List<ItemCartResponse> checkIfItemsHaveStock(List<ItemCartResponse> allProductsInCart) {
+        allProductsInCart.forEach(item -> {
+            String itemStringQuantity = item.getQuantity();
+            if (itemStringQuantity.equals(ZERO_STRING_VALUE)) {
+                item.setQuantity(NO_STOCK_ITEM +connectionTransactionPort.getItemSupplyDate(item.getItemId()));
+            }
+        });
+        return allProductsInCart;
+    }
 
+    private List<Cart> getAllAndUpdateDate(Long userId) {
+        List<Cart> allProductsInCart = cartPersistentPort.findAllCartRecords(userId);
+        allProductsInCart.forEach(this::prepareDate);
+        return allProductsInCart;
+    }
     private String updatedItemInStock(Cart cart) {
         Long savedQuantity = cartPersistentPort.getItemQuantityByItemId(cart.getItemId());
 
@@ -91,8 +112,8 @@ public class CartUseCase implements ICartServicePort {
             throw new CategoriesLimitException(CATEGORIES_LIMIT_EXCEED_MESSAGE);
         }
     }
-    private List<Long> fillItemIdsOfUser(Cart cart) {
-        return cartPersistentPort.getItemsInUserCart(cart.getUserId());
+    private List<Long> itemIdsInUserCart(Long userId) {
+        return cartPersistentPort.getItemsInUserCart(userId);
     }
     private String createConfirmationMessage(Cart cart) {
         if (!connectionStockPort.isEnoughStock(cart.getItemId(), cart.getQuantity())){
@@ -100,10 +121,10 @@ public class CartUseCase implements ICartServicePort {
         }
         return ADDED_TO_CART_MESSAGE + cart.getItemId();
     }
-
-
     private void prepareDate(Cart cart) {
-        cartPersistentPort.findDateByItemId(cart.getItemId()).ifPresentOrElse(existingDate ->{},
+        cartPersistentPort.findDateByItemId(cart.getItemId()).ifPresentOrElse(
+                existingDate ->{},
+
                 () -> cart.setCreationDate(ACTUAL_DATE)
         );
         cart.setUpdateDate(ACTUAL_DATE);

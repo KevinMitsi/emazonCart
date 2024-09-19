@@ -7,7 +7,7 @@ import feign.codec.ErrorDecoder;
 
 public class CustomErrorDecoder implements ErrorDecoder {
 
-    public static final String FEIGN_SERVER_EXCEPTION_MESSAGE = "Error dentro en el servidor del microservicio foraneo: ";
+    public static final String FEIGN_SERVER_EXCEPTION_MESSAGE = "Error dentro del servidor del microservicio foraneo: ";
     public static final String FEIGN_REQUEST_EXCEPTION_MESSAGE = "Error en la peticion que está haciendo al microservicio foraneo: ";
     private final ErrorDecoder defaultDecoder = new ErrorDecoder.Default();
 

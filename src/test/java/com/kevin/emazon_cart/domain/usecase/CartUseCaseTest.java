@@ -1,6 +1,8 @@
 package com.kevin.emazon_cart.domain.usecase;
 
 import com.kevin.emazon_cart.domain.model.Cart;
+import com.kevin.emazon_cart.domain.model.ItemCartRequest;
+import com.kevin.emazon_cart.domain.model.ItemCartResponse;
 import com.kevin.emazon_cart.domain.spi.ICartPersistentPort;
 import com.kevin.emazon_cart.domain.spi.externalservices.IConnectionStockPort;
 import com.kevin.emazon_cart.domain.spi.externalservices.IConnectionTransactionPort;
@@ -102,7 +104,7 @@ class CartUseCaseTest {
         when(cartPersistentPort.getItemsInUserCart(userId)).thenReturn(items);
 
         // Act
-        List<Long> result = cartUseCase.getItemsInUserCart(userId);
+        List<Long> result = cartUseCase.getItemsIdsInUserCart(userId);
 
         // Assert
         assertEquals(items, result);
@@ -120,5 +122,28 @@ class CartUseCaseTest {
 
         // Assert
         verify(cartPersistentPort, times(1)).deleteByItemId(itemId, userId);
+    }
+    @Test
+    void findAllProductsInCart_ShouldReturnItemsInCart() {
+        // Arrange
+        Long userId = 1L;
+        Long brand = 3L;
+        List<Long> itemIds = List.of(2L, 3L);
+        List<ItemCartResponse> expectedResponse = List.of(
+                new ItemCartResponse(2L, "Item 2", brand, "3L"),
+                new ItemCartResponse(3L, "Item 3", brand, "3L")
+        );
+
+        when(cartPersistentPort.getItemsInUserCart(userId)).thenReturn(itemIds);
+        when(connectionStockPort.findAllProductsInCart(any(ItemCartRequest.class)))
+                .thenReturn(expectedResponse);
+
+        // Act
+        List<ItemCartResponse> result = cartUseCase.findAllProductsInCart(userId,null, brand);
+
+        // Assert
+        assertEquals(expectedResponse, result);
+        verify(cartPersistentPort, times(1)).getItemsInUserCart(userId);
+        verify(connectionStockPort, times(1)).findAllProductsInCart(any(ItemCartRequest.class));
     }
 }
