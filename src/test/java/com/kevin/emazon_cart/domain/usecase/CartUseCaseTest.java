@@ -6,6 +6,7 @@ import com.kevin.emazon_cart.domain.model.ItemCartResponse;
 import com.kevin.emazon_cart.domain.spi.ICartPersistentPort;
 import com.kevin.emazon_cart.domain.spi.externalservices.IConnectionStockPort;
 import com.kevin.emazon_cart.domain.spi.externalservices.IConnectionTransactionPort;
+import com.kevin.emazon_cart.domain.usecase.helper.CartUseCaseHelper;
 import com.kevin.emazon_cart.infraestructure.exception.CategoriesLimitException;
 import com.kevin.emazon_cart.infraestructure.exception.ItemNotFoundException;
 import com.kevin.emazon_cart.infraestructure.exception.NotEnoughItemInStockResponse;
@@ -18,6 +19,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
+import static com.kevin.emazon_cart.domain.usecase.helper.CartUseCaseHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -52,7 +54,7 @@ class CartUseCaseTest {
             String result = cartUseCase.addItemToCart(cart);
 
             // Assert
-            assertEquals(CartUseCase.ADDED_TO_CART_MESSAGE + cart.getItemId(), result);
+            assertEquals(CartUseCaseHelper.ADDED_TO_CART_MESSAGE + cart.getItemId(), result);
             verify(cartPersistentPort, times(1)).addItemToCart(cart);
         }
 
