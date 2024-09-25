@@ -10,6 +10,6 @@ public interface ICartServicePort {
     List<Long> getItemsIdsInUserCart(Long userId);
 
     void deleteByItemId(Long itemId, Long userId);
-
-    List<ItemCartResponse> findAllProductsInCart(Long userId, Long category, Long brand);
+    List<ItemCartResponse> findAllProductsInCart(Long category, Long brand);
+    void buy();
 }
