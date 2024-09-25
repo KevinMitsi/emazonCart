@@ -23,4 +23,8 @@ public interface ICartRepository extends JpaRepository<CartEntity, Long> {
     void deleteByItemIdAndUserId(Long itemId, Long userId);
 
     List<CartEntity>findAllByUserId(Long userId);
+
+    boolean existsAllByUserIdAndItemIdIn(Long userId, List<Long> itemIds);
+
+    void deleteAllByItemIdInAndUserId(List<Long> itemIds, Long userId);
 }

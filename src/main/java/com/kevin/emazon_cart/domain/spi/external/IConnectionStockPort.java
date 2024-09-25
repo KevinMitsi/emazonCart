@@ -1,4 +1,4 @@
-package com.kevin.emazon_cart.domain.spi.externalservices;
+package com.kevin.emazon_cart.domain.spi.external;
 
 
 import com.kevin.emazon_cart.domain.model.ItemCartRequest;
@@ -13,5 +13,6 @@ public interface IConnectionStockPort {
     boolean validateCategoryLimit(List<Long> itemsIds);
 
     List<ItemCartResponse>findAllProductsInCart(ItemCartRequest itemCartRequest);
+    void decreaseQuantityInStock(Long itemId, Long quantity);
 
 }
