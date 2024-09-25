@@ -15,5 +15,8 @@ public interface ICartPersistentPort {
     void deleteByItemId(Long itemId, Long userId);
     List<Cart> findAllCartRecords(Long userId);
     void saveAll(List<Cart> products);
+    void deleteAll(List<Long> itemIds, Long userId);
+    boolean existAll(Long userId,List<Long> ids);
+
 
 }

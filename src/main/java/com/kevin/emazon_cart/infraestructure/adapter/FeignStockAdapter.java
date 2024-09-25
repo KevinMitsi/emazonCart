@@ -2,7 +2,7 @@ package com.kevin.emazon_cart.infraestructure.adapter;
 
 import com.kevin.emazon_cart.domain.model.ItemCartRequest;
 import com.kevin.emazon_cart.domain.model.ItemCartResponse;
-import com.kevin.emazon_cart.domain.spi.externalservices.IConnectionStockPort;
+import com.kevin.emazon_cart.domain.spi.external.IConnectionStockPort;
 import com.kevin.emazon_cart.infraestructure.feign.service.StockFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +33,11 @@ public class FeignStockAdapter implements IConnectionStockPort {
     @Override
     public List<ItemCartResponse> findAllProductsInCart(ItemCartRequest itemCartRequest) {
         return stockFeignClient.findAllProductsInCart(itemCartRequest);
+    }
+
+    @Override
+    public void decreaseQuantityInStock(Long itemId, Long quantity) {
+        stockFeignClient.reduceQuantityInStock(itemId, quantity);
     }
 
 

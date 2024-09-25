@@ -6,12 +6,12 @@ import com.kevin.emazon_cart.domain.model.ItemCartResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("api/v1/cart")
@@ -29,7 +29,6 @@ public class CartController {
     @PostMapping("/add")
     @Secured(ROLE_CLIENT)
     public ResponseEntity<String> addToCart(@Valid @RequestBody CartDto cartDto){
-        cartDto.setUserId((Long) SecurityContextHolder.getContext().getAuthentication().getDetails());
         return ResponseEntity.status(201).body(cartHandler.addItemToCart(cartDto));
     }
 
@@ -37,7 +36,7 @@ public class CartController {
     @Secured(ROLE_CLIENT)
     public ResponseEntity<String> deleteItemFromCart(@PathVariable Long itemId){
         cartHandler.deleteByItemId(itemId, (Long) SecurityContextHolder.getContext().getAuthentication().getDetails());
-        return ResponseEntity.status(200).body(DELETED_ITEM_MESSAGE+itemId);
+        return ResponseEntity.ok().body(DELETED_ITEM_MESSAGE+itemId);
     }
 
     @GetMapping("/myItems")
@@ -48,9 +47,15 @@ public class CartController {
                @RequestParam(required = false, defaultValue = ORDER_DEFAULT_VALUE)String orderingMethod,
                @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NUMBER)Integer pageNumber,
                @RequestParam(required = false, defaultValue = DEFAULT_PAGE_SIZE)Integer pageSize){
-        return ResponseEntity.status(HttpStatus.OK).body(
-                cartHandler.findAllProductsInCart((Long) SecurityContextHolder.getContext().getAuthentication().getDetails(),
-                        categoryId,brandId,orderingMethod,pageNumber,pageSize));
+        return ResponseEntity.ok().body(
+                cartHandler.findAllProductsInCart(categoryId,brandId,orderingMethod,pageNumber,pageSize));
+    }
+
+    @GetMapping("/buy")
+    @Secured(ROLE_CLIENT)
+    public ResponseEntity<String>buyItemsInCart(){
+        cartHandler.buy();
+        return ResponseEntity.ok("Felicidades ha comprado correctamente los items de su carrito");
     }
 
 

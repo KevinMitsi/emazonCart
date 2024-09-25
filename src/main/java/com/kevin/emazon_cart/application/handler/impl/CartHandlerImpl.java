@@ -27,13 +27,18 @@ public class CartHandlerImpl implements ICartHandler {
     }
 
     @Override
-    public Page<ItemCartResponse> findAllProductsInCart(Long userId, Long category, Long brand,
+    public Page<ItemCartResponse> findAllProductsInCart(Long category, Long brand,
                                                         String orderingMethod, Integer pageNumber, Integer pageSize) {
 
         return ListToPageConverter
-                .convertListIntoPage(cartServicePort.findAllProductsInCart(userId, category, brand),
+                .convertListIntoPage(cartServicePort.findAllProductsInCart(category, brand),
                         pageNumber,
                         pageSize,
                         orderingMethod);
+    }
+
+    @Override
+    public void buy() {
+        cartServicePort.buy();
     }
 }

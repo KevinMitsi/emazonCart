@@ -1,36 +1,36 @@
 package com.kevin.emazon_cart.domain.usecase;
 
 import com.kevin.emazon_cart.domain.api.ICartServicePort;
-import com.kevin.emazon_cart.domain.model.Cart;
-import com.kevin.emazon_cart.domain.model.ItemCartRequest;
-import com.kevin.emazon_cart.domain.model.ItemCartResponse;
+import com.kevin.emazon_cart.domain.model.*;
 import com.kevin.emazon_cart.domain.spi.ICartPersistentPort;
-import com.kevin.emazon_cart.domain.spi.externalservices.IConnectionStockPort;
-import com.kevin.emazon_cart.domain.spi.externalservices.IConnectionTransactionPort;
-import com.kevin.emazon_cart.infraestructure.exception.CategoriesLimitException;
-import com.kevin.emazon_cart.infraestructure.exception.ItemIsNotInCartException;
-import com.kevin.emazon_cart.infraestructure.exception.ItemNotFoundException;
-import com.kevin.emazon_cart.infraestructure.exception.NotEnoughItemInStockResponse;
+import com.kevin.emazon_cart.domain.spi.ISecurityContextPort;
+import com.kevin.emazon_cart.domain.spi.external.IConnectionStockPort;
+import com.kevin.emazon_cart.domain.spi.external.IConnectionTransactionPort;
+import com.kevin.emazon_cart.infraestructure.exception.*;
 
 import java.util.List;
 
 import static com.kevin.emazon_cart.domain.usecase.helper.CartUseCaseHelper.*;
 
 public class CartUseCase implements ICartServicePort {
+    public static final String EMPTY_CART_EXCEPTION_MESSAGE = "EL carrito está vacío";
     private final ICartPersistentPort cartPersistentPort;
     private final IConnectionStockPort connectionStockPort;
     private final IConnectionTransactionPort connectionTransactionPort;
+    private final ISecurityContextPort securityContextPort;
 
 
-    public CartUseCase(ICartPersistentPort cartPersistentPort, IConnectionStockPort connectionStockPort, IConnectionTransactionPort connectionTransactionPort) {
+    public CartUseCase(ICartPersistentPort cartPersistentPort, IConnectionStockPort connectionStockPort, IConnectionTransactionPort connectionTransactionPort, ISecurityContextPort securityContextPort) {
         this.cartPersistentPort = cartPersistentPort;
         this.connectionStockPort = connectionStockPort;
         this.connectionTransactionPort = connectionTransactionPort;
+        this.securityContextPort = securityContextPort;
     }
 
 
     @Override
     public String addItemToCart(Cart cart) {
+        cart.setUserId(securityContextPort.userId());
         validateIfItemExistInStock(cart);
         List<Long> itemsInCart = itemIdsInUserCart(cart.getUserId());
 
@@ -61,13 +61,38 @@ public class CartUseCase implements ICartServicePort {
         cartPersistentPort.saveAll(allProductsInCartUpdated);
     }
     @Override
-    public List<ItemCartResponse> findAllProductsInCart(Long userId, Long category, Long brand) {
-        List<Long> userItemIds = getItemsIdsInUserCart(userId);
+    public List<ItemCartResponse> findAllProductsInCart(Long category, Long brand) {
+        List<Long> userItemIds = getItemsIdsInUserCart(securityContextPort.userId());
         return checkIfItemsHaveStock(connectionStockPort.findAllProductsInCart(new ItemCartRequest(userItemIds, category, brand)));
+    }
+
+    @Override
+    public void buy() {
+        List<Cart>productsInCart = cartPersistentPort.findAllCartRecords(securityContextPort.userId());
+        verifyIfCartIsEmpty(productsInCart);
+        createSaleRequest(productsInCart);
+        decreaseItemsInStock(productsInCart);
+        cartPersistentPort.deleteAll(productsInCart.stream().map(Cart::getItemId).toList(), securityContextPort.userId());
+    }
+
+    private void verifyIfCartIsEmpty(List<Cart> productsInCart) {
+        if (productsInCart == null||productsInCart.isEmpty()){
+            throw new EmptyCartException(EMPTY_CART_EXCEPTION_MESSAGE);
+        }
     }
 
 
     //Methods of the class
+
+    private void createSaleRequest(List<Cart> productsInCart) {
+        List<SaleItemDetails> saleItemDetails = productsInCart
+                .stream().map(cart -> new SaleItemDetails(cart.getItemId(), cart.getQuantity())).toList();
+        connectionTransactionPort.createSaleRequest(new SaleRequest(saleItemDetails, ACTUAL_DATE));
+    }
+
+    private void decreaseItemsInStock(List<Cart> productsInCart) {
+        productsInCart.forEach(cart -> connectionStockPort.decreaseQuantityInStock(cart.getItemId(), cart.getQuantity()));
+    }
 
     private List<ItemCartResponse> checkIfItemsHaveStock(List<ItemCartResponse> allProductsInCart) {
         allProductsInCart.forEach(item -> {
