@@ -18,4 +18,6 @@ public class SaleRequest {
 
     private Date saleDate;
 
+    private PaymentStatus paymentStatus;
+
 }

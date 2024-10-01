@@ -22,7 +22,7 @@ public interface StockFeignClient {
     @PostMapping("itemCarts")
     List<ItemCartResponse> findAllProductsInCart(@RequestBody ItemCartRequest itemCartRequest);
 
-    @PutMapping("reduceQuantity/{itemID}/{quantity}")
+    @PatchMapping("reduceQuantity/{itemID}/{quantity}")
     void reduceQuantityInStock(@PathVariable Long itemID, @PathVariable Long quantity);
 
 }

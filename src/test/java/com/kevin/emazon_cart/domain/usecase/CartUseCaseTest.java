@@ -9,10 +9,7 @@ import com.kevin.emazon_cart.domain.spi.ISecurityContextPort;
 import com.kevin.emazon_cart.domain.spi.external.IConnectionStockPort;
 import com.kevin.emazon_cart.domain.spi.external.IConnectionTransactionPort;
 import com.kevin.emazon_cart.domain.usecase.helper.CartUseCaseHelper;
-import com.kevin.emazon_cart.infraestructure.exception.CategoriesLimitException;
-import com.kevin.emazon_cart.infraestructure.exception.EmptyCartException;
-import com.kevin.emazon_cart.infraestructure.exception.ItemNotFoundException;
-import com.kevin.emazon_cart.infraestructure.exception.NotEnoughItemInStockResponse;
+import com.kevin.emazon_cart.infraestructure.exception.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,6 +27,9 @@ import static org.mockito.Mockito.*;
 class CartUseCaseTest {
 
     public static final String STOCK_ERROR_MESSAGE = "Stock error";
+    public static final List<Cart> CART_LIST = Arrays.asList(
+            new Cart(1L, 2L, 1L, 3L, null, null),
+            new Cart(1L, 2L, 1L, 3L, null, null));
     private CartUseCase cartUseCase;
     private ICartPersistentPort cartPersistentPort;
     private IConnectionStockPort connectionStockPort;
@@ -199,13 +199,9 @@ class CartUseCaseTest {
     void buy_ShouldThrowException_WhenErrorOccursWhileDecreasingStock() {
         // Arrange
         Long userId = 1L;
-        List<Cart> productsInCart = Arrays.asList(
-                new Cart(null,1L, userId, 2L,null,null), // Producto 1, cantidad 2
-                new Cart(null,2L, userId, 1L,null,null)  // Producto 2, cantidad 1
-        );
 
         when(securityContextPort.userId()).thenReturn(userId);
-        when(cartPersistentPort.findAllCartRecords(userId)).thenReturn(productsInCart);
+        when(cartPersistentPort.findAllCartRecords(userId)).thenReturn(CART_LIST);
 
         doThrow(new RuntimeException(STOCK_ERROR_MESSAGE)).when(connectionStockPort).decreaseQuantityInStock(1L, 2L);
 
@@ -216,5 +212,18 @@ class CartUseCaseTest {
         verify(cartPersistentPort, never()).deleteAll(anyList(), anyLong());
     }
 
+    @Test
+    void shouldThrowBuyRequestExceptionButSkipFurtherMethodsOnRuntimeException() {
+
+        when(cartPersistentPort.findAllCartRecords(anyLong())).thenReturn(CART_LIST);
+
+        doThrow(new RuntimeException()).when(connectionTransactionPort).createSaleRequest(any(SaleRequest.class));
+
+        assertThrows(BuyRequestException.class, () -> cartUseCase.buy());
+
+
+        verify(cartPersistentPort, never()).deleteAll(anyList(), anyLong());
+        verify(connectionStockPort, never()).decreaseQuantityInStock(anyLong(), anyLong());
+    }
 
 }
