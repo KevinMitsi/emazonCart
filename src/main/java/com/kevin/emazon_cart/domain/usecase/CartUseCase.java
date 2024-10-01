@@ -14,6 +14,7 @@ import static com.kevin.emazon_cart.domain.usecase.helper.CartUseCaseHelper.*;
 
 public class CartUseCase implements ICartServicePort {
     public static final String EMPTY_CART_EXCEPTION_MESSAGE = "EL carrito está vacío";
+    public static final String BUY_REQUEST_EXCEPTION_MESSAGE = "Ha ocurrido un error al momento de realizar la compra";
     private final ICartPersistentPort cartPersistentPort;
     private final IConnectionStockPort connectionStockPort;
     private final IConnectionTransactionPort connectionTransactionPort;
@@ -68,26 +69,30 @@ public class CartUseCase implements ICartServicePort {
 
     @Override
     public void buy() {
-        List<Cart>productsInCart = cartPersistentPort.findAllCartRecords(securityContextPort.userId());
-        verifyIfCartIsEmpty(productsInCart);
-        createSaleRequest(productsInCart);
-        decreaseItemsInStock(productsInCart);
-        cartPersistentPort.deleteAll(productsInCart.stream().map(Cart::getItemId).toList(), securityContextPort.userId());
+            List<Cart> productsInCart = cartPersistentPort.findAllCartRecords(securityContextPort.userId());
+            verifyIfCartIsEmpty(productsInCart);
+        try {
+            createSaleRequest(productsInCart);
+            decreaseItemsInStock(productsInCart);
+            cartPersistentPort.deleteAll(productsInCart.stream().map(Cart::getItemId).toList(), securityContextPort.userId());
+        }catch (Exception e){
+            throw new BuyRequestException(BUY_REQUEST_EXCEPTION_MESSAGE);
+        }
     }
 
+
+
+    //Methods of the class
     private void verifyIfCartIsEmpty(List<Cart> productsInCart) {
         if (productsInCart == null||productsInCart.isEmpty()){
             throw new EmptyCartException(EMPTY_CART_EXCEPTION_MESSAGE);
         }
     }
 
-
-    //Methods of the class
-
     private void createSaleRequest(List<Cart> productsInCart) {
         List<SaleItemDetails> saleItemDetails = productsInCart
                 .stream().map(cart -> new SaleItemDetails(cart.getItemId(), cart.getQuantity())).toList();
-        connectionTransactionPort.createSaleRequest(new SaleRequest(saleItemDetails, ACTUAL_DATE));
+        connectionTransactionPort.createSaleRequest(new SaleRequest(saleItemDetails, ACTUAL_DATE, PaymentStatus.STATUS_PENDING));
     }
 
     private void decreaseItemsInStock(List<Cart> productsInCart) {

@@ -2,6 +2,7 @@ package com.kevin.emazon_cart.infraestructure.controller.advice;
 
 import com.kevin.emazon_cart.application.dto.ExceptionResponseDto;
 
+import com.kevin.emazon_cart.infraestructure.exception.EmptyCartException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,4 +29,8 @@ public class ExceptionHandlerInterceptor {
                 map(ex -> new ExceptionResponseDto("Error en la creación del campo: "+ex.getField() ,ex.getDefaultMessage(), HttpStatus.BAD_REQUEST)).toList());
     }
 
+    @ExceptionHandler(EmptyCartException.class)
+    public ResponseEntity<ExceptionResponseDto> inCaseThrowingEmptyCartException(EmptyCartException e){
+        return ResponseEntity.badRequest().body(new ExceptionResponseDto(e.getClass().getName(), e.getMessage(), HttpStatus.BAD_REQUEST));
+    }
 }
